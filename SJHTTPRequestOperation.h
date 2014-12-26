@@ -25,10 +25,12 @@
 @property(nonatomic,strong) NSMutableDictionary *requestHeaders;
 @property(nonatomic,strong) NSString *requestMethod; //default GET (only support GET)
 
+
+//response
 @property(nonatomic,strong) NSMutableData *responseData;
 @property(nonatomic,strong) NSString *responseString;
 @property(nonatomic,strong) NSDictionary *responseHeaders;
-
+@property(nonatomic,assign) NSInteger responseStatusCode;
 
 -(instancetype)initWithUrl:(NSURL*)url;
 

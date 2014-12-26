@@ -105,7 +105,6 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
     if ([self.delegate respondsToSelector:@selector(requestDidStarted:)]) {
         [(NSObject*)self.delegate performSelectorOnMainThread:@selector(requestDidStarted:) withObject:nil waitUntilDone:YES];
     }
-    
     // 1 CFHTTPMessage
     request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, (__bridge CFStringRef)(self.requestMethod), (__bridge CFURLRef)(self.url), kCFHTTPVersion1_1);
     // 2 配置RequestHeaders
@@ -173,7 +172,10 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
     
     CFHTTPMessageRef message = (CFHTTPMessageRef)CFReadStreamCopyProperty(readStream, kCFStreamPropertyHTTPResponseHeader);
     
+    
     if (CFHTTPMessageIsHeaderComplete(message)) {
+        
+        self.responseStatusCode = (NSInteger)CFHTTPMessageGetResponseStatusCode(message);
         
         CFDictionaryRef responseHeader = CFHTTPMessageCopyAllHeaderFields(message);
         self.responseHeaders = (__bridge  NSDictionary*)responseHeader;
@@ -184,7 +186,6 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
 
 -(void)requestDidReceiveResponeHeaders:(NSDictionary*)responseHeaders
 {
-
     if ([self.delegate respondsToSelector:@selector(request:didReceiveResponseHeaders:)]) {
         [self.delegate performSelector:@selector(request:didReceiveResponseHeaders:) withObject:self withObject:responseHeaders];
     }
