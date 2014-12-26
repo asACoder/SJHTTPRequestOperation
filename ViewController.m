@@ -11,8 +11,6 @@
 
 
 
-//#define STRURL @"http://118.194.57.122:8888/httpclient/agentservice.jsp?verifyCode=3F742948DA367004727397CE7261E624&Page=1&Pagesize=20&AgentId=163423162&messagename=GetPropertySurveyOrderInfoList&city=%E5%8C%97%E4%BA%AC&wirelesscode=FD694829C9B1173787C3FA3B650123C1"
-
 #define STRURL @"http://www.baidu.com"
 
 @interface ViewController () <SJHTTPRequestOperationDelegate>
