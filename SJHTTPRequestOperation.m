@@ -56,7 +56,6 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
 {
     @autoreleasepool {
         
-        NSLog(@"runloop in thread run");
         [[NSThread currentThread] setName:@"HTTPRequestWithCFNetWork"];
         NSRunLoop * runLoop = [NSRunLoop currentRunLoop];
         [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
@@ -100,8 +99,12 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
 #pragma mark -main
 -(void)main
 {
-    NSLog(@"request run in %@ thread",[[NSThread currentThread] name]);
 
+    NSLog(@"begin start");
+    // request start
+    if ([self.delegate respondsToSelector:@selector(requestDidStarted:)]) {
+        [(NSObject*)self.delegate performSelectorOnMainThread:@selector(requestDidStarted:) withObject:nil waitUntilDone:YES];
+    }
     
     // 1 CFHTTPMessage
     request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, (__bridge CFStringRef)(self.requestMethod), (__bridge CFURLRef)(self.url), kCFHTTPVersion1_1);
@@ -116,12 +119,6 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
     if (CFReadStreamSetClient(readStream, registeredEvents, readStreamClientCallBack, &readContext)) {
         CFReadStreamScheduleWithRunLoop(readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
         CFReadStreamOpen(readStream);
-        
-        NSLog(@"begin start");
-        // request start
-        if ([self.delegate respondsToSelector:@selector(requestDidStarted:)]) {
-            [self.delegate  requestDidStarted:self];
-        }
     }
     
 }
@@ -141,12 +138,12 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
         case kCFStreamEventEndEncountered:{
             
             [self completeOperation];
+            [self readResponseHeaders];
             self.responseString = [[NSString alloc] initWithData:self.responseData encoding:NSUTF8StringEncoding];
 
             if ([self.delegate respondsToSelector:@selector(requestDidFinished:)]) {
                 [self.delegate requestDidFinished:self];
             }
-
             break;
         }
         case kCFStreamEventErrorOccurred:{
@@ -163,7 +160,34 @@ void readStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, vo
 
 -(void)processDataWithBuf:(UInt8*)buf length:(CFIndex)length
 {
+
+    [self readResponseHeaders];
+
     [self.responseData appendBytes:(const void*)buf length:length];
+}
+
+#pragma mark -获取响应头信息
+-(void)readResponseHeaders
+{
+    if (self.responseHeaders) return;
+    
+    CFHTTPMessageRef message = (CFHTTPMessageRef)CFReadStreamCopyProperty(readStream, kCFStreamPropertyHTTPResponseHeader);
+    
+    if (CFHTTPMessageIsHeaderComplete(message)) {
+        
+        CFDictionaryRef responseHeader = CFHTTPMessageCopyAllHeaderFields(message);
+        self.responseHeaders = (__bridge  NSDictionary*)responseHeader;
+        
+        [self performSelectorOnMainThread:@selector(requestDidReceiveResponeHeaders:) withObject:self.responseHeaders waitUntilDone:YES];
+    }
+}
+
+-(void)requestDidReceiveResponeHeaders:(NSDictionary*)responseHeaders
+{
+
+    if ([self.delegate respondsToSelector:@selector(request:didReceiveResponseHeaders:)]) {
+        [self.delegate performSelector:@selector(request:didReceiveResponseHeaders:) withObject:self withObject:responseHeaders];
+    }
 }
 
 - (void)completeOperation {

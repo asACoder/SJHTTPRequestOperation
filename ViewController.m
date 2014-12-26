@@ -37,7 +37,14 @@
 
 -(void)requestDidStarted:(SJHTTPRequestOperation *)request
 {
+//    NSLog(@"sleep 10");
+//    sleep(10);
     NSLog(@"started");
+}
+
+-(void)request:(SJHTTPRequestOperation *)request didReceiveResponseHeaders:(NSDictionary *)responseHeaders
+{
+    NSLog(@"responseHeaders:%@",responseHeaders);
 }
 
 -(void)requestDidFinished:(SJHTTPRequestOperation *)request

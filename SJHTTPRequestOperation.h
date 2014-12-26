@@ -27,7 +27,7 @@
 
 @property(nonatomic,strong) NSMutableData *responseData;
 @property(nonatomic,strong) NSString *responseString;
-
+@property(nonatomic,strong) NSDictionary *responseHeaders;
 
 
 -(instancetype)initWithUrl:(NSURL*)url;
